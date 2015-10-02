@@ -23,13 +23,10 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import com.thor.roadreport.R;
-import com.thor.roadreport.library.Config;
-import com.thor.roadreport.util.SimpleRecyclerAdapter;
-import com.thor.roadreport.model.VersionModel;
-import com.thor.roadreport.util.MyRecyclerScroll;
-import com.thor.roadreport.util.Utils;
-
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.error.VolleyError;
+import com.android.volley.request.StringRequest;
 import com.mikepenz.google_material_typeface_library.GoogleMaterial;
 import com.mikepenz.materialdrawer.AccountHeader;
 import com.mikepenz.materialdrawer.AccountHeaderBuilder;
@@ -40,20 +37,31 @@ import com.mikepenz.materialdrawer.model.ProfileDrawerItem;
 import com.mikepenz.materialdrawer.model.SecondaryDrawerItem;
 import com.mikepenz.materialdrawer.model.SectionDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IProfile;
-
+import com.thor.roadreport.R;
+import com.thor.roadreport.adapter.ListAdapter;
+import com.thor.roadreport.app.AppController;
 import com.thor.roadreport.helper.SQLiteHandler;
 import com.thor.roadreport.helper.SessionManager;
+import com.thor.roadreport.library.Config;
+import com.thor.roadreport.model.ListItem;
+import com.thor.roadreport.util.Cons;
+import com.thor.roadreport.util.MyRecyclerScroll;
+import com.thor.roadreport.util.Utils;
 
-import java.util.HashMap;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.File;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ListAdapter.OnClickItemOnList {
 
     private SQLiteHandler db;
     private SessionManager session;
@@ -73,11 +81,11 @@ public class MainActivity extends AppCompatActivity {
     ImageButton fabBtn;
     View fabShadow;
     boolean fadeToolbar = false;
-    SimpleRecyclerAdapter simpleRecyclerAdapter;
+    ListAdapter adapter;
+    List<ListItem> items;
 
     // LogCat tag
     private static final String TAG = MainActivity.class.getSimpleName();
-
 
     // Camera activity request codes
     private static final int CAMERA_CAPTURE_IMAGE_REQUEST_CODE = 100;
@@ -149,8 +157,7 @@ public class MainActivity extends AppCompatActivity {
         toolbarHeight = Utils.getToolbarHeight(this);
 
         toolbarContainer = (LinearLayout) findViewById(R.id.fabhide_toolbar_container);
-        recyclerView = (RecyclerView) findViewById
-                (R.id.recyclerview);
+        recyclerView = (RecyclerView) findViewById(R.id.recyclerview);
 
         /* Set top padding= toolbar height.
          So there is no overlap when the toolbar hides.
@@ -162,21 +169,20 @@ public class MainActivity extends AppCompatActivity {
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(linearLayoutManager);
 
-        // Adding list data thrice for a more comfortable scroll.
-        List<String> listData = new ArrayList<String>();
-        int ct = 0;
-        for (int i = 0; i < VersionModel.data.length * 2; i++) {
-            listData.add(VersionModel.data[ct]);
-            ct++;
-            if (ct == VersionModel.data.length) {
-                ct = 0;
-            }
-        }
+        items = new ArrayList<>();
+        items.add(new ListItem("1", "satu"));
+        items.add(new ListItem("2", "dua"));
+        items.add(new ListItem("3", "tiga"));
+        items.add(new ListItem("4", "empat"));
+        items.add(new ListItem("5", "lima"));
+        items.add(new ListItem("6", "enam"));
+        items.add(new ListItem("7", "tujuh"));
 
-        if (simpleRecyclerAdapter == null) {
-            simpleRecyclerAdapter = new SimpleRecyclerAdapter(listData);
-            recyclerView.setAdapter(simpleRecyclerAdapter);
-        }
+        adapter = new ListAdapter(items, this);
+        adapter.setOnClickItemOnList(this);
+        recyclerView.setAdapter(adapter);
+
+//        ambilDataDariAPI();
 
         recyclerView.addOnScrollListener(new MyRecyclerScroll() {
             @Override
@@ -425,4 +431,56 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void ambilDataDariAPI() {
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, Cons.URL_ITEM, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                if (response != null) {
+                    try {
+                        JSONObject obj = new JSONObject(response);
+                        JSONArray data = obj.getJSONArray("items");
+
+                        for (int i=0; i<data.length(); i++) {
+                            ListItem item = new ListItem();
+
+                            item.setJudul(data.getJSONObject(i).getString("judul"));
+                            item.setKeterangan(data.getJSONObject(i).getString("keterangan"));
+                            item.setImage(data.getJSONObject(i).getString("imageUrl"));
+
+                            items.add(item);
+                        }
+
+                        adapter.notifyDataSetChanged();
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+
+                }
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+            }
+        });
+
+        AppController.getInstance().addToRequestQueue(stringRequest, TAG);
+    }
+
+
+    @Override
+    public void onClick(int position) {
+        ListItem itemnya = items.get(position);
+        String judul = itemnya.getJudul();
+        String keterangan = itemnya.getKeterangan();
+
+        Intent intent = new Intent(MainActivity.this, DetailActivity.class);
+        intent.putExtra("judul", judul);
+        intent.putExtra("ket", keterangan);
+        startActivity(intent);
+
+    }
 }
