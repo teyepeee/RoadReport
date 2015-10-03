@@ -1,1 +1,1 @@
-Simple report app.
+Aplikasi laporan kerusakan jalan.
