@@ -5,61 +5,81 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.thor.roadreport.R;
 import com.thor.roadreport.model.ListItem;
-import com.thor.roadreport.util.ListViewHolder;
 
 import java.util.List;
 
-public class ListAdapter extends RecyclerView.Adapter<ListViewHolder> {
+import butterknife.Bind;
+import butterknife.ButterKnife;
+import de.hdodenhof.circleimageview.CircleImageView;
 
-    private List<ListItem> feedItemList;
-    private Context mContext;
+public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
 
-    public ListAdapter(Context context, List<ListItem> feedItemList) {
+    List<ListItem> feedItemList;
+    Context context;
+    OnClickItemOnList onClickItemOnList;
+
+
+    public ListAdapter(List<ListItem> feedItemList, Context context) {
         this.feedItemList = feedItemList;
-        this.mContext = context;
+        this.context = context;
     }
 
-    public class CustomViewHolder extends RecyclerView.ViewHolder {
-        protected TextView textView;
-
-        public CustomViewHolder(View view) {
-            super(view);
-            this.textView = (TextView) view.findViewById(R.id.nama);
-        }
+    public void setOnClickItemOnList(OnClickItemOnList onClickItemOnList) {
+        this.onClickItemOnList = onClickItemOnList;
     }
 
     @Override
-    public ListViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
-        View v = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.rec_item, null);
-        ListViewHolder mh = new ListViewHolder(v);
-        return mh;
+    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View rootView = LayoutInflater.from(parent.getContext()).inflate(R.layout.list_row, parent, false);
+        return new ViewHolder(rootView);
     }
 
     @Override
-    public void onBindViewHolder(ListViewHolder feedListRowHolder, int i) {
-        ListItem item = feedItemList.get(i);
+    public void onBindViewHolder(ViewHolder holder, final int position) {
+        ListItem items = feedItemList.get(position);
 
-        feedListRowHolder.tvName.setText(item.getNama());
+        holder.judul.setText(items.getJudul());
+        holder.keterangan.setText(items.getKeterangan());
 
-        View.OnClickListener clickListener = new View.OnClickListener() {
+        holder.area.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
-                CustomViewHolder holder = (CustomViewHolder) view.getTag();
-                int position = holder.getPosition();
-
-                ListItem listItem = feedItemList.get(position);
-                Toast.makeText(mContext, listItem.getNama(), Toast.LENGTH_SHORT).show();
+            public void onClick(View v) {
+                if (onClickItemOnList != null) {
+                    onClickItemOnList.onClick(position);
+                }
             }
-        };
+        });
+
     }
 
     @Override
     public int getItemCount() {
-        return (null != feedItemList ? feedItemList.size() : 0);
+        return feedItemList.size();
+    }
+
+    public class ViewHolder extends RecyclerView.ViewHolder {
+
+        @Bind(R.id.gambar)
+        CircleImageView gambar;
+        @Bind(R.id.judul)
+        TextView judul;
+        @Bind(R.id.keterangan)
+        TextView keterangan;
+        @Bind(R.id.area)
+        LinearLayout area;
+
+        public ViewHolder(View itemView) {
+            super(itemView);
+            ButterKnife.bind(this, itemView);
+        }
+    }
+
+    public interface OnClickItemOnList {
+        void onClick(int position);
     }
 }

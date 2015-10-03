@@ -1,7 +1,5 @@
 package com.thor.roadreport.activity;
 
-import com.rengwuxian.materialedittext.MaterialEditText;
-
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
@@ -13,20 +11,20 @@ import android.widget.Toast;
 
 import com.android.volley.Request.Method;
 import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
+import com.android.volley.error.VolleyError;
+import com.android.volley.request.StringRequest;
+import com.rengwuxian.materialedittext.MaterialEditText;
+import com.thor.roadreport.R;
+import com.thor.roadreport.app.AppController;
+import com.thor.roadreport.helper.SQLiteHandler;
+import com.thor.roadreport.helper.SessionManager;
+import com.thor.roadreport.util.Cons;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import com.thor.roadreport.R;
-import com.thor.roadreport.app.AppConfig;
-import com.thor.roadreport.app.AppController;
-import com.thor.roadreport.helper.SQLiteHandler;
-import com.thor.roadreport.helper.SessionManager;
 
 public class RegisterActivity extends AppCompatActivity {
 
@@ -113,7 +111,7 @@ public class RegisterActivity extends AppCompatActivity {
         showDialog();
 
         StringRequest strReq = new StringRequest(Method.POST,
-                AppConfig.URL_REGISTER, new Response.Listener<String>() {
+                Cons.URL_REGISTER, new Response.Listener<String>() {
 
             @Override
             public void onResponse(String response) {

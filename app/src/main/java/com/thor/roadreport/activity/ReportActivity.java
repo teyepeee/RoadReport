@@ -1,23 +1,5 @@
 package com.thor.roadreport.activity;
 
-import com.thor.roadreport.R;
-import com.thor.roadreport.library.AndroidMultiPartEntity.ProgressListener;
-import com.thor.roadreport.library.AndroidMultiPartEntity;
-import com.thor.roadreport.library.Config;
-
-import java.io.File;
-import java.io.IOException;
-
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.mime.content.FileBody;
-import org.apache.http.entity.mime.content.StringBody;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.util.EntityUtils;
-
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -36,11 +18,47 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.error.AuthFailureError;
+import com.android.volley.error.VolleyError;
+import com.android.volley.request.StringRequest;
+import com.rengwuxian.materialedittext.MaterialEditText;
+import com.thor.roadreport.R;
+import com.thor.roadreport.app.AppController;
+import com.thor.roadreport.library.AndroidMultiPartEntity;
+import com.thor.roadreport.library.AndroidMultiPartEntity.ProgressListener;
+import com.thor.roadreport.library.Config;
+import com.thor.roadreport.util.Cons;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.entity.mime.content.StringBody;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+import butterknife.Bind;
+import butterknife.ButterKnife;
+
 public class ReportActivity extends AppCompatActivity {
     Toolbar toolbar;
 
     // LogCat tag
     private static final String TAG = MainActivity.class.getSimpleName();
+
+    @Bind(R.id.judul_keluhan)
+    MaterialEditText judulKeluhan;
+    @Bind(R.id.isi_keluhan)
+    MaterialEditText isiKeluhan;
 
     private ProgressBar progressBar;
     private String filePath = null;
@@ -53,6 +71,8 @@ public class ReportActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_report);
+        ButterKnife.bind(this);
+
         txtPercentage = (TextView) findViewById(R.id.txtPercentage);
         //btnUpload = (Button) findViewById(R.id.btnUpload);
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
@@ -80,20 +100,11 @@ public class ReportActivity extends AppCompatActivity {
                     "Sorry, file path is missing!", Toast.LENGTH_LONG).show();
         }
 
-//        btnUpload.setOnClickListener(new View.OnClickListener() {
-//
-//            @Override
-//            public void onClick(View v) {
-//                // uploading the file to server
-//                new UploadFileToServer().execute();
-//            }
-//        });
-
     }
 
     /**
      * Displaying captured image/video on the screen
-     * */
+     */
     private void previewMedia(boolean isImage) {
         // Checking whether captured media is image or video
         if (isImage) {
@@ -113,7 +124,7 @@ public class ReportActivity extends AppCompatActivity {
 
     /**
      * Uploading the file to server
-     * */
+     */
     private class UploadFileToServer extends AsyncTask<Void, Integer, String> {
         @Override
         protected void onPreExecute() {
@@ -206,7 +217,7 @@ public class ReportActivity extends AppCompatActivity {
 
     /**
      * Method to show alert dialog
-     * */
+     */
     private void showAlert(String message) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage(message).setTitle("Response from Servers")
@@ -238,6 +249,34 @@ public class ReportActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void PostDataToServer() {
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, Cons.URL_REPORT, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                System.out.println(response);
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                error.printStackTrace();
+            }
+        }) {
+
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                HashMap<String, String> params = new HashMap<>();
+
+                params.put(Cons.JUDUL_KELUHAN, judulKeluhan.getText().toString());
+                params.put(Cons.ISI_KELUHAN, isiKeluhan.getText().toString());
+                params.put(Cons.GAMBAR,"");
+
+                return params;
+            }
+        };
+
+        AppController.getInstance().addToRequestQueue(stringRequest, TAG);
     }
 
 }

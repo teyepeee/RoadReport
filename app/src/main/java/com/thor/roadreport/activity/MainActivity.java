@@ -170,19 +170,19 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.OnCli
         recyclerView.setLayoutManager(linearLayoutManager);
 
         items = new ArrayList<>();
-        items.add(new ListItem("1", "satu"));
-        items.add(new ListItem("2", "dua"));
-        items.add(new ListItem("3", "tiga"));
-        items.add(new ListItem("4", "empat"));
-        items.add(new ListItem("5", "lima"));
-        items.add(new ListItem("6", "enam"));
-        items.add(new ListItem("7", "tujuh"));
+//        items.add(new ListItem("1", "satu"));
+//        items.add(new ListItem("2", "dua"));
+//        items.add(new ListItem("3", "tiga"));
+//        items.add(new ListItem("4", "empat"));
+//        items.add(new ListItem("5", "lima"));
+//        items.add(new ListItem("6", "enam"));
+//        items.add(new ListItem("7", "tujuh"));
 
         adapter = new ListAdapter(items, this);
         adapter.setOnClickItemOnList(this);
         recyclerView.setAdapter(adapter);
 
-//        ambilDataDariAPI();
+        ambilDataDariAPI();
 
         recyclerView.addOnScrollListener(new MyRecyclerScroll() {
             @Override
@@ -230,10 +230,6 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.OnCli
         }
     }
 
-    /**
-     * Logging out the user. Will set isLoggedIn flag to false in shared
-     * preferences Clears the user data from sqlite users table
-     * */
     private void logoutUser() {
         session.setLogin(false);
 
@@ -245,13 +241,6 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.OnCli
         finish();
     }
 
-    /**
-     * small helper method to reuse the logic to build the AccountHeader
-     * this will be used to replace the header of the drawer with a compact/normal header
-     *
-     * @param compact
-     * @param savedInstanceState
-     */
     private void buildHeader(boolean compact, Bundle savedInstanceState) {
         // Create the AccountHeader
         headerResult = new AccountHeaderBuilder()
@@ -263,9 +252,6 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.OnCli
                 .build();
     }
 
-    /**
-     * Checking device has camera hardware or not
-     * */
     private boolean isDeviceSupportCamera() {
         if (getApplicationContext().getPackageManager().hasSystemFeature(
                 PackageManager.FEATURE_CAMERA)) {
@@ -277,9 +263,6 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.OnCli
         }
     }
 
-    /**
-     * Launching camera app to capture image
-     */
     private void captureImage() {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         fileUri = getOutputMediaFileUri(MEDIA_TYPE_IMAGE);
@@ -313,9 +296,6 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.OnCli
         fileUri = savedInstanceState.getParcelable("file_uri");
     }
 
-    /**
-     * Receiving activity result method will be called after closing the camera
-     * */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         // if the result is capturing Image
@@ -351,20 +331,10 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.OnCli
         startActivity(i);
     }
 
-    /**
-     * ------------ Helper Methods ----------------------
-     * */
-
-    /**
-     * Creating file uri to store image/video
-     */
     public Uri getOutputMediaFileUri(int type) {
         return Uri.fromFile(getOutputMediaFile(type));
     }
 
-    /**
-     * returning image / video
-     */
     private static File getOutputMediaFile(int type) {
 
         // External sdcard location
@@ -444,8 +414,8 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.OnCli
                             ListItem item = new ListItem();
 
                             item.setJudul(data.getJSONObject(i).getString("judul"));
-                            item.setKeterangan(data.getJSONObject(i).getString("keterangan"));
-                            item.setImage(data.getJSONObject(i).getString("imageUrl"));
+                            //item.setKeterangan(data.getJSONObject(i).getString("keterangan"));
+                            item.setImage(data.getJSONObject(i).getString("gambar"));
 
                             items.add(item);
                         }
@@ -455,7 +425,6 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.OnCli
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
-
 
                 }
 

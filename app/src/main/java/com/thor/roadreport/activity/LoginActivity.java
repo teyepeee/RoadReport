@@ -1,6 +1,5 @@
 package com.thor.roadreport.activity;
 
-import com.rengwuxian.materialedittext.MaterialEditText;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
@@ -12,20 +11,20 @@ import android.widget.Toast;
 
 import com.android.volley.Request.Method;
 import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
+import com.android.volley.error.VolleyError;
+import com.android.volley.request.StringRequest;
+import com.rengwuxian.materialedittext.MaterialEditText;
+import com.thor.roadreport.R;
+import com.thor.roadreport.app.AppController;
+import com.thor.roadreport.helper.SQLiteHandler;
+import com.thor.roadreport.helper.SessionManager;
+import com.thor.roadreport.util.Cons;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import com.thor.roadreport.R;
-import com.thor.roadreport.app.AppConfig;
-import com.thor.roadreport.app.AppController;
-import com.thor.roadreport.helper.SQLiteHandler;
-import com.thor.roadreport.helper.SessionManager;
 
 public class LoginActivity extends Activity {
 
@@ -111,7 +110,7 @@ public class LoginActivity extends Activity {
         showDialog();
 
         StringRequest strReq = new StringRequest(Method.POST,
-                AppConfig.URL_LOGIN, new Response.Listener<String>() {
+                Cons.URL_LOGIN, new Response.Listener<String>() {
 
             @Override
             public void onResponse(String response) {
@@ -159,16 +158,11 @@ public class LoginActivity extends Activity {
 
             }
         }, new Response.ErrorListener() {
-
             @Override
             public void onErrorResponse(VolleyError error) {
-                Log.e(TAG, "Login Error: " + error.getMessage());
-                Toast.makeText(getApplicationContext(),
-                        error.getMessage(), Toast.LENGTH_LONG).show();
-                hideDialog();
+
             }
         }) {
-
             @Override
             protected Map<String, String> getParams() {
                 // Posting parameters to login url
@@ -181,8 +175,9 @@ public class LoginActivity extends Activity {
 
         };
 
-        // Adding request to request queue
-        AppController.getInstance().addToRequestQueue(strReq, tag_string_req);
+
+                // Adding request to request queue
+                AppController.getInstance().addToRequestQueue(strReq, tag_string_req);
     }
 
     private void showDialog() {
