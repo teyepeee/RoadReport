@@ -44,7 +44,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
         ListItem items = feedItemList.get(position);
 
         holder.judul.setText(items.getJudul());
-        holder.keterangan.setText(items.getKeterangan());
+        holder.isi_laporan.setText(items.getIsi());
 
         holder.area.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -68,8 +68,8 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
         CircleImageView gambar;
         @Bind(R.id.judul)
         TextView judul;
-        @Bind(R.id.keterangan)
-        TextView keterangan;
+        @Bind(R.id.isi_laporan)
+        TextView isi_laporan;
         @Bind(R.id.area)
         LinearLayout area;
 

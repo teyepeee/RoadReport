@@ -3,17 +3,22 @@ package com.thor.roadreport.activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
+import android.text.Editable;
+import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.android.volley.Request.Method;
 import com.android.volley.Response;
 import com.android.volley.error.VolleyError;
 import com.android.volley.request.StringRequest;
-import com.rengwuxian.materialedittext.MaterialEditText;
 import com.thor.roadreport.R;
 import com.thor.roadreport.app.AppController;
 import com.thor.roadreport.helper.SQLiteHandler;
@@ -26,14 +31,30 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
+import butterknife.Bind;
+import butterknife.ButterKnife;
+
 public class RegisterActivity extends AppCompatActivity {
 
     private static final String TAG = RegisterActivity.class.getSimpleName();
-    private Button btnRegister;
-    private Button btnLinkToLogin;
-    private MaterialEditText inputFullName;
-    private MaterialEditText inputEmail;
-    private MaterialEditText inputPassword;
+
+    @Bind(R.id.input_layout_name)
+    TextInputLayout inputLayoutName;
+    @Bind(R.id.input_layout_email)
+    TextInputLayout inputLayoutEmail;
+    @Bind(R.id.input_layout_password)
+    TextInputLayout inputLayoutPassword;
+    @Bind(R.id.nama_field)
+    EditText inputFullName;
+    @Bind(R.id.email_field)
+    EditText inputEmail;
+    @Bind(R.id.password_field)
+    EditText inputPassword;
+    @Bind(R.id.sign_up)
+    Button btnRegister;
+    @Bind(R.id.btnLinkToLoginScreen)
+    Button btnLinkToLogin;
+
     private ProgressDialog pDialog;
     private SessionManager session;
     private SQLiteHandler db;
@@ -43,11 +64,7 @@ public class RegisterActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
-        inputFullName = (MaterialEditText) findViewById(R.id.nama_field);
-        inputEmail = (MaterialEditText) findViewById(R.id.email_field);
-        inputPassword = (MaterialEditText) findViewById(R.id.password_field);
-        btnRegister = (Button) findViewById(R.id.sign_up);
-        btnLinkToLogin = (Button) findViewById(R.id.btnLinkToLoginScreen);
+        ButterKnife.bind(this);
 
         // Progress dialog
         pDialog = new ProgressDialog(this);
@@ -68,20 +85,14 @@ public class RegisterActivity extends AppCompatActivity {
             finish();
         }
 
-        // Register Button Click event
-        btnRegister.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View view) {
-                String name = inputFullName.getText().toString().trim();
-                String email = inputEmail.getText().toString().trim();
-                String password = inputPassword.getText().toString().trim();
+        inputFullName.addTextChangedListener(new MyTextWatcher(inputFullName));
+        inputEmail.addTextChangedListener(new MyTextWatcher(inputEmail));
+        inputPassword.addTextChangedListener(new MyTextWatcher(inputPassword));
 
-                if (!name.isEmpty() && !email.isEmpty() && !password.isEmpty()) {
-                    registerUser(name, email, password);
-                } else {
-                    Toast.makeText(getApplicationContext(),
-                            "Please enter your details!", Toast.LENGTH_LONG)
-                            .show();
-                }
+        btnRegister.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                submitForm();
             }
         });
 
@@ -99,6 +110,105 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     /**
+     * Validating form
+     */
+    private void submitForm() {
+        if (!validateName()) {
+            return;
+        }
+
+        if (!validateEmail()) {
+            return;
+        }
+
+        if (!validatePassword()) {
+            return;
+        }
+
+        String name = inputFullName.getText().toString().trim();
+        String email = inputEmail.getText().toString().trim();
+        String password = inputPassword.getText().toString().trim();
+        registerUser(name, email, password);
+    }
+
+    private boolean validateName() {
+        if (inputFullName.getText().toString().trim().isEmpty()) {
+            inputLayoutName.setError(getString(R.string.err_msg_name));
+            requestFocus(inputFullName);
+            return false;
+        } else {
+            inputLayoutName.setErrorEnabled(false);
+        }
+
+        return true;
+    }
+
+    private boolean validateEmail() {
+        String email = inputEmail.getText().toString().trim();
+
+        if (email.isEmpty() || !isValidEmail(email)) {
+            inputLayoutEmail.setError(getString(R.string.err_msg_email));
+            requestFocus(inputEmail);
+            return false;
+        } else {
+            inputLayoutEmail.setErrorEnabled(false);
+        }
+
+        return true;
+    }
+
+    private boolean validatePassword() {
+        if (inputPassword.getText().toString().trim().isEmpty()) {
+            inputLayoutPassword.setError(getString(R.string.err_msg_password));
+            requestFocus(inputPassword);
+            return false;
+        } else {
+            inputLayoutPassword.setErrorEnabled(false);
+        }
+
+        return true;
+    }
+
+    private static boolean isValidEmail(String email) {
+        return !TextUtils.isEmpty(email) && android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches();
+    }
+
+    private void requestFocus(View view) {
+        if (view.requestFocus()) {
+            getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
+        }
+    }
+
+    private class MyTextWatcher implements TextWatcher {
+
+        private View view;
+
+        private MyTextWatcher(View view) {
+            this.view = view;
+        }
+
+        public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+        }
+
+        public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+        }
+
+        public void afterTextChanged(Editable editable) {
+            switch (view.getId()) {
+                case R.id.nama_field:
+                    validateName();
+                    break;
+                case R.id.email_field:
+                    validateEmail();
+                    break;
+                case R.id.password_field:
+                    validatePassword();
+                    break;
+            }
+        }
+    }
+
+    /**
      * Function to store user in MySQL database will post params(tag, name,
      * email, password) to register url
      * */
@@ -107,7 +217,7 @@ public class RegisterActivity extends AppCompatActivity {
         // Tag used to cancel the request
         String tag_string_req = "req_register";
 
-        pDialog.setMessage("Registering ...");
+        pDialog.setMessage("Registering...");
         showDialog();
 
         StringRequest strReq = new StringRequest(Method.POST,
@@ -127,13 +237,11 @@ public class RegisterActivity extends AppCompatActivity {
                         String uid = jObj.getString("uid");
 
                         JSONObject user = jObj.getJSONObject("user");
-                        String name = user.getString("name");
+                        String nama = user.getString("nama");
                         String email = user.getString("email");
-                        String created_at = user
-                                .getString("created_at");
 
                         // Inserting row in users table
-                        db.addUser(name, email, uid, created_at);
+                        db.addUser(nama, email, uid);
 
                         Toast.makeText(getApplicationContext(), "User successfully registered. Try login now!", Toast.LENGTH_LONG).show();
 
@@ -171,7 +279,7 @@ public class RegisterActivity extends AppCompatActivity {
             protected Map<String, String> getParams() {
                 // Posting params to register url
                 Map<String, String> params = new HashMap<String, String>();
-                params.put("name", name);
+                params.put("nama", name);
                 params.put("email", email);
                 params.put("password", password);
 

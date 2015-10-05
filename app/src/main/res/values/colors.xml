@@ -4,20 +4,17 @@
     <color name="colorPrimaryDark">#1976D2</color>
     <color name="colorPrimaryLight">#BBDEFB</color>
     <color name="colorBackground">#FFFFFF</color>
-    <color name="colorAccent">#E91E63</color>
-    <color name="colorAccent2">#EA4C88</color>
+    <color name="colorAccent">#2196F3</color>
+    <color name="colorAccent2">#FF4081</color>
+    <color name="colorFab">#FF4081</color>
+    <color name="colorFabPressed">#C51162</color>
     <color name="colorPrimaryText">#212121</color>
     <color name="colorSecondaryText">#727272</color>
     <color name="colorWhiteText">#FFFFFF</color>
     <color name="colorToolbarText">#FFFFFF</color>
-    <color name="colorPrimary2">#82b1ff</color>
+    <color name="colorRegisterBg">#2E3237</color>
     <color name="input_register">#888888</color>
-    <color name="btn_login_bg">#eceef1</color>
+    <color name="btn_login_bg">#ECEEF1</color>
     <color name="icons">#FFFFFF</color>
     <color name="divider">#B6B6B6</color>
-    <!--Pink 500-->
-    <color name="accent_500">#E91E63</color>
-    <!--Pink 700-->
-    <color name="accent_700">#C2185B</color>
-
 </resources>

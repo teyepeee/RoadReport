@@ -2,10 +2,17 @@ package com.thor.roadreport.activity;
 
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.NavigationView;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -14,39 +21,20 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.animation.AccelerateInterpolator;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
-import android.view.animation.DecelerateInterpolator;
-import android.widget.FrameLayout;
-import android.widget.ImageButton;
-import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.error.VolleyError;
 import com.android.volley.request.StringRequest;
-import com.mikepenz.google_material_typeface_library.GoogleMaterial;
-import com.mikepenz.materialdrawer.AccountHeader;
-import com.mikepenz.materialdrawer.AccountHeaderBuilder;
-import com.mikepenz.materialdrawer.Drawer;
-import com.mikepenz.materialdrawer.DrawerBuilder;
-import com.mikepenz.materialdrawer.model.PrimaryDrawerItem;
-import com.mikepenz.materialdrawer.model.ProfileDrawerItem;
-import com.mikepenz.materialdrawer.model.SecondaryDrawerItem;
-import com.mikepenz.materialdrawer.model.SectionDrawerItem;
-import com.mikepenz.materialdrawer.model.interfaces.IProfile;
 import com.thor.roadreport.R;
 import com.thor.roadreport.adapter.ListAdapter;
 import com.thor.roadreport.app.AppController;
 import com.thor.roadreport.helper.SQLiteHandler;
 import com.thor.roadreport.helper.SessionManager;
-import com.thor.roadreport.library.Config;
 import com.thor.roadreport.model.ListItem;
 import com.thor.roadreport.util.Cons;
-import com.thor.roadreport.util.MyRecyclerScroll;
-import com.thor.roadreport.util.Utils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -60,29 +48,24 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
+import butterknife.Bind;
+import butterknife.ButterKnife;
 
-public class MainActivity extends AppCompatActivity implements ListAdapter.OnClickItemOnList {
+
+public class MainActivity extends AppCompatActivity
+        implements ListAdapter.OnClickItemOnList, NavigationView.OnNavigationItemSelectedListener {
 
     private SQLiteHandler db;
     private SessionManager session;
 
-    //save our header or result
-    private AccountHeader headerResult = null;
-    private Drawer result = null;
-
-    private IProfile profile;
-
-    Toolbar toolbar;
     RecyclerView recyclerView;
-    int fabMargin;
-    LinearLayout toolbarContainer;
-    int toolbarHeight;
-    FrameLayout fab;
-    ImageButton fabBtn;
-    View fabShadow;
-    boolean fadeToolbar = false;
     ListAdapter adapter;
     List<ListItem> items;
+
+    @Bind(R.id.name)
+    TextView txtName;
+    @Bind(R.id.email)
+    TextView txtEmail;
 
     // LogCat tag
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -97,14 +80,10 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.OnCli
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        Animation animation = AnimationUtils.loadAnimation(this, R.anim.simple_grow);
-
-        setContentView(R.layout.activity_fab_hide);
-
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
-
+        setContentView(R.layout.activity_main);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        ButterKnife.bind(this);
 
         // SqLite database handler
         db = new SQLiteHandler(getApplicationContext());
@@ -116,109 +95,48 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.OnCli
             logoutUser();
         }
 
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        ColorStateList rippleColor = ContextCompat.getColorStateList(getApplicationContext(), R.color.fab_ripple_color);
+        fab.setBackgroundTintList(rippleColor);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                        //.setAction("Action", null).show();
+                captureImage();
+            }
+        });
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.setDrawerListener(toggle);
+        toggle.syncState();
+
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+
         // Fetching user details from sqlite
         HashMap<String, String> user = db.getUserDetails();
 
-        String name = user.get("name");
+        String name = user.get("nama");
         String email = user.get("email");
 
-        // Create a few sample profile
-        profile = new ProfileDrawerItem().withName(name).withEmail(email).withIcon(getResources().getDrawable(R.drawable.profile));
+        txtName.setText(name);
+        txtEmail.setText(email);
 
-        // Create the AccountHeader
-        buildHeader(false, savedInstanceState);
-
-        //Create the drawer
-        result = new DrawerBuilder()
-                .withActivity(this)
-                .withToolbar(toolbar)
-                .withAccountHeader(headerResult) //set the AccountHeader we created earlier for the header
-                .addDrawerItems(
-                        new PrimaryDrawerItem().withName(R.string.drawer_item_home).withIcon(GoogleMaterial.Icon.gmd_home),
-                        new PrimaryDrawerItem().withName(R.string.drawer_item_profil).withIcon(GoogleMaterial.Icon.gmd_account_box),
-                        new SectionDrawerItem().withName(R.string.drawer_item_report),
-                        new SecondaryDrawerItem().withName(R.string.drawer_item_laporan).withIcon(GoogleMaterial.Icon.gmd_report)
-                ) // add the items we want to use with our Drawer
-                .withOnDrawerNavigationListener(new Drawer.OnDrawerNavigationListener() {
-                    @Override
-                    public boolean onNavigationClickListener(View clickedView) {
-                        //this method is only called if the Arrow icon is shown. The hamburger is automatically managed by the MaterialDrawer
-                        //if the back arrow is shown. close the activity
-                        MainActivity.this.finish();
-                        //return true if we have consumed the event
-                        return true;
-                    }
-                })
-                .withSavedInstance(savedInstanceState)
-                .build();
-
-        //  FAB margin needed for animation
-        fabMargin = getResources().getDimensionPixelSize(R.dimen.fab_margin);
-        toolbarHeight = Utils.getToolbarHeight(this);
-
-        toolbarContainer = (LinearLayout) findViewById(R.id.fabhide_toolbar_container);
         recyclerView = (RecyclerView) findViewById(R.id.recyclerview);
-
-        /* Set top padding= toolbar height.
-         So there is no overlap when the toolbar hides.
-         Avoid using 0 for the other parameters as it resets padding set via XML!*/
-        recyclerView.setPadding(recyclerView.getPaddingLeft(), toolbarHeight,
-                recyclerView.getPaddingRight(), recyclerView.getPaddingBottom());
 
         recyclerView.setHasFixedSize(true);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(linearLayoutManager);
 
         items = new ArrayList<>();
-//        items.add(new ListItem("1", "satu"));
-//        items.add(new ListItem("2", "dua"));
-//        items.add(new ListItem("3", "tiga"));
-//        items.add(new ListItem("4", "empat"));
-//        items.add(new ListItem("5", "lima"));
-//        items.add(new ListItem("6", "enam"));
-//        items.add(new ListItem("7", "tujuh"));
+        ambilDataDariAPI();
 
         adapter = new ListAdapter(items, this);
         adapter.setOnClickItemOnList(this);
         recyclerView.setAdapter(adapter);
-
-        ambilDataDariAPI();
-
-        recyclerView.addOnScrollListener(new MyRecyclerScroll() {
-            @Override
-            public void show() {
-                toolbarContainer.animate().translationY(0).setInterpolator(new DecelerateInterpolator(2)).start();
-                if (fadeToolbar)
-                    toolbarContainer.animate().alpha(1).setInterpolator(new DecelerateInterpolator(1)).start();
-                fab.animate().translationY(0).setInterpolator(new DecelerateInterpolator(2)).start();
-            }
-
-            @Override
-            public void hide() {
-                toolbarContainer.animate().translationY(-toolbarHeight).setInterpolator(new AccelerateInterpolator(2)).start();
-                if (fadeToolbar)
-                    toolbarContainer.animate().alpha(0).setInterpolator(new AccelerateInterpolator(1)).start();
-                fab.animate().translationY(fab.getHeight() + fabMargin).setInterpolator(new AccelerateInterpolator(2)).start();
-            }
-        });
-
-        fab = (FrameLayout) findViewById(R.id.myfab_main);
-        fabBtn = (ImageButton) findViewById(R.id.myfab_main_btn);
-        fabShadow = findViewById(R.id.myfab_shadow);
-
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-//            fabShadow.setVisibility(View.GONE);
-//            fabBtn.setBackground(getDrawable(R.drawable.ripple_accent));
-//        }
-
-        fab.startAnimation(animation);
-
-        fabBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                captureImage();
-            }
-        });
 
         // Checking camera availability
         if (!isDeviceSupportCamera()) {
@@ -239,17 +157,6 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.OnCli
         Intent intent = new Intent(MainActivity.this, LoginActivity.class);
         startActivity(intent);
         finish();
-    }
-
-    private void buildHeader(boolean compact, Bundle savedInstanceState) {
-        // Create the AccountHeader
-        headerResult = new AccountHeaderBuilder()
-                .withActivity(this)
-                .withHeaderBackground(R.drawable.header)
-                .addProfiles(profile)
-                .withSelectionListEnabledForSingleProfile(false)
-                .withSavedInstance(savedInstanceState)
-                .build();
     }
 
     private boolean isDeviceSupportCamera() {
@@ -277,11 +184,6 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.OnCli
      */
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        //add the values which need to be saved from the drawer to the bundle
-        outState = result.saveInstanceState(outState);
-        //add the values which need to be saved from the accountHeader to the bundle
-        outState = headerResult.saveInstanceState(outState);
-
         // save file url in bundle as it will be null on screen orientation
         // changes
         outState.putParcelable("file_uri", fileUri);
@@ -305,7 +207,6 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.OnCli
                 // successfully captured the image
                 // launching upload activity
                 launchUploadActivity(true);
-
 
             } else if (resultCode == RESULT_CANCELED) {
 
@@ -341,13 +242,13 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.OnCli
         File mediaStorageDir = new File(
                 Environment
                         .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
-                Config.IMAGE_DIRECTORY_NAME);
+                Cons.IMAGE_DIRECTORY_NAME);
 
         // Create the storage directory if it does not exist
         if (!mediaStorageDir.exists()) {
             if (!mediaStorageDir.mkdirs()) {
                 Log.d(TAG, "Oops! Failed create "
-                        + Config.IMAGE_DIRECTORY_NAME + " directory");
+                        + Cons.IMAGE_DIRECTORY_NAME + " directory");
                 return null;
             }
         }
@@ -393,9 +294,9 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.OnCli
 
     @Override
     public void onBackPressed() {
-        //handle the back press :D close the drawer first and if the drawer is closed close the activity
-        if (result != null && result.isDrawerOpen()) {
-            result.closeDrawer();
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
         } else {
             super.onBackPressed();
         }
@@ -414,7 +315,7 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.OnCli
                             ListItem item = new ListItem();
 
                             item.setJudul(data.getJSONObject(i).getString("judul"));
-                            //item.setKeterangan(data.getJSONObject(i).getString("keterangan"));
+                            item.setIsi(data.getJSONObject(i).getString("isi_laporan"));
                             item.setImage(data.getJSONObject(i).getString("gambar"));
 
                             items.add(item);
@@ -444,12 +345,32 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.OnCli
     public void onClick(int position) {
         ListItem itemnya = items.get(position);
         String judul = itemnya.getJudul();
-        String keterangan = itemnya.getKeterangan();
+        String isi_laporan = itemnya.getIsi();
 
         Intent intent = new Intent(MainActivity.this, DetailActivity.class);
         intent.putExtra("judul", judul);
-        intent.putExtra("ket", keterangan);
+        intent.putExtra("isi_laporan", isi_laporan);
         startActivity(intent);
 
     }
+
+    @SuppressWarnings("StatementWithEmptyBody")
+    @Override
+    public boolean onNavigationItemSelected(MenuItem item) {
+        // Handle navigation view item clicks here.
+        int id = item.getItemId();
+
+        if (id == R.id.home) {
+            // Handle the camera action
+        } else if (id == R.id.profil) {
+
+        } else if (id == R.id.laporan) {
+
+        }
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+        return true;
+    }
+
 }

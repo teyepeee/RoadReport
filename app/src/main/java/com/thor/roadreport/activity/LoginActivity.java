@@ -4,16 +4,21 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.design.widget.TextInputLayout;
+import android.text.Editable;
+import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.android.volley.Request.Method;
 import com.android.volley.Response;
 import com.android.volley.error.VolleyError;
 import com.android.volley.request.StringRequest;
-import com.rengwuxian.materialedittext.MaterialEditText;
 import com.thor.roadreport.R;
 import com.thor.roadreport.app.AppController;
 import com.thor.roadreport.helper.SQLiteHandler;
@@ -26,13 +31,26 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
+import butterknife.Bind;
+import butterknife.ButterKnife;
+
 public class LoginActivity extends Activity {
 
-    private static final String TAG = RegisterActivity.class.getSimpleName();
-    private Button btnLogin;
-    private Button btnLinkToRegister;
-    private MaterialEditText inputEmail;
-    private MaterialEditText inputPassword;
+    private static final String TAG = LoginActivity.class.getSimpleName();
+
+    @Bind(R.id.input_login_email)
+    TextInputLayout inputLoginEmail;
+    @Bind(R.id.input_login_password)
+    TextInputLayout inputLoginPassword;
+    @Bind(R.id.email_field)
+    EditText inputEmail;
+    @Bind(R.id.password_field)
+    EditText inputPassword;
+    @Bind(R.id.btnLogin)
+    Button btnLogin;
+    @Bind(R.id.btnLinkToRegisterScreen)
+    Button btnLinkToRegister;
+
     private ProgressDialog pDialog;
     private SessionManager session;
     private SQLiteHandler db;
@@ -42,10 +60,7 @@ public class LoginActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        inputEmail = (MaterialEditText) findViewById(R.id.email_field);
-        inputPassword = (MaterialEditText) findViewById(R.id.password_field);
-        btnLogin = (Button) findViewById(R.id.btnLogin);
-        btnLinkToRegister = (Button) findViewById(R.id.btnLinkToRegisterScreen);
+        ButterKnife.bind(this);
 
         // Progress dialog
         pDialog = new ProgressDialog(this);
@@ -65,25 +80,14 @@ public class LoginActivity extends Activity {
             finish();
         }
 
-        // Login button Click Event
+        inputEmail.addTextChangedListener(new MyTextWatcher(inputEmail));
+        inputPassword.addTextChangedListener(new MyTextWatcher(inputPassword));
+
         btnLogin.setOnClickListener(new View.OnClickListener() {
-
+            @Override
             public void onClick(View view) {
-                String email = inputEmail.getText().toString().trim();
-                String password = inputPassword.getText().toString().trim();
-
-                // Check for empty data in the form
-                if (!email.isEmpty() && !password.isEmpty()) {
-                    // login user
-                    checkLogin(email, password);
-                } else {
-                    // Prompt user to enter credentials
-                    Toast.makeText(getApplicationContext(),
-                            "Please enter the credentials!", Toast.LENGTH_LONG)
-                            .show();
-                }
+                submitForm();
             }
-
         });
 
         // Link to Register Screen
@@ -100,13 +104,92 @@ public class LoginActivity extends Activity {
     }
 
     /**
+     * Validating form
+     */
+    private void submitForm() {
+        if (!validateEmail()) {
+            return;
+        }
+
+        if (!validatePassword()) {
+            return;
+        }
+
+        String email = inputEmail.getText().toString().trim();
+        String password = inputPassword.getText().toString().trim();
+        checkLogin(email, password);
+    }
+
+    private boolean validateEmail() {
+        String email = inputEmail.getText().toString().trim();
+
+        if (email.isEmpty() || !isValidEmail(email)) {
+            inputLoginEmail.setError(getString(R.string.err_msg_email));
+            requestFocus(inputEmail);
+            return false;
+        } else {
+            inputLoginEmail.setErrorEnabled(false);
+        }
+
+        return true;
+    }
+
+    private boolean validatePassword() {
+        if (inputPassword.getText().toString().trim().isEmpty()) {
+            inputLoginPassword.setError(getString(R.string.err_msg_password));
+            requestFocus(inputPassword);
+            return false;
+        } else {
+            inputLoginPassword.setErrorEnabled(false);
+        }
+
+        return true;
+    }
+
+    private static boolean isValidEmail(String email) {
+        return !TextUtils.isEmpty(email) && android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches();
+    }
+
+    private void requestFocus(View view) {
+        if (view.requestFocus()) {
+            getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
+        }
+    }
+
+    private class MyTextWatcher implements TextWatcher {
+
+        private View view;
+
+        private MyTextWatcher(View view) {
+            this.view = view;
+        }
+
+        public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+        }
+
+        public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+        }
+
+        public void afterTextChanged(Editable editable) {
+            switch (view.getId()) {
+                case R.id.email_field:
+                    validateEmail();
+                    break;
+                case R.id.password_field:
+                    validatePassword();
+                    break;
+            }
+        }
+    }
+
+    /**
      * function to verify login details in mysql db
      * */
     private void checkLogin(final String email, final String password) {
         // Tag used to cancel the request
         String tag_string_req = "req_login";
 
-        pDialog.setMessage("Logging in ...");
+        pDialog.setMessage("Logging in...");
         showDialog();
 
         StringRequest strReq = new StringRequest(Method.POST,
@@ -131,13 +214,11 @@ public class LoginActivity extends Activity {
                         String uid = jObj.getString("uid");
 
                         JSONObject user = jObj.getJSONObject("user");
-                        String name = user.getString("name");
+                        String nama = user.getString("nama");
                         String email = user.getString("email");
-                        String created_at = user
-                                .getString("created_at");
 
                         // Inserting row in users table
-                        db.addUser(name, email, uid, created_at);
+                        db.addUser(nama, email, uid);
 
                         // Launch main activity
                         Intent intent = new Intent(LoginActivity.this,
@@ -175,9 +256,8 @@ public class LoginActivity extends Activity {
 
         };
 
-
-                // Adding request to request queue
-                AppController.getInstance().addToRequestQueue(strReq, tag_string_req);
+        // Adding request to request queue
+        AppController.getInstance().addToRequestQueue(strReq, tag_string_req);
     }
 
     private void showDialog() {

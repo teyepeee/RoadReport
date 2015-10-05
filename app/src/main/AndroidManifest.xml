@@ -25,8 +25,8 @@
         android:name=".app.AppController"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name_singkat"
-        android:theme="@style/MyTheme" >
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme" >
 
         <!--
             <meta-data
@@ -35,12 +35,9 @@
         -->
 
         <activity
-            android:name=".activity.MainActivity"
-            android:label="@string/app_name" >
-        </activity>
-        <activity
             android:name=".activity.LoginActivity"
-            android:label="@string/app_name" >
+            android:label="@string/app_name"
+            android:theme="@style/AppTheme.CustomActionBar" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -49,25 +46,30 @@
         </activity>
         <activity
             android:name=".activity.RegisterActivity"
-            android:label="@string/daftar" >
+            android:label="@string/daftar"
+            android:theme="@style/AppTheme.CustomActionBar" >
         </activity>
         <activity
-            android:name=".activity.PasswordResetActivity"
-            android:label="@string/reset"
-            android:parentActivityName=".activity.LoginActivity" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".activity.LoginActivity" />
+            android:name=".activity.MainActivity"
+            android:label="@string/app_name"
+            android:theme="@style/AppTheme.NoActionBar" >
         </activity>
         <activity
             android:name=".activity.ReportActivity"
             android:label="@string/kirim"
+            android:theme="@style/AppTheme.NoActionBar"
             android:parentActivityName=".activity.MainActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".activity.MainActivity" />
         </activity>
-        <activity android:name=".activity.DetailActivity" >
+        <activity
+            android:name=".activity.DetailActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:parentActivityName=".activity.MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".activity.MainActivity" />
         </activity>
     </application>
 

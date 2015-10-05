@@ -3,14 +3,14 @@ package com.thor.roadreport.model;
 public class ListItem {
     private String judul;
     private String image;
-    private String keterangan;
+    private String isi_laporan;
 
     public ListItem() {
     }
 
-    public ListItem(String judul, String keterangan) {
+    public ListItem(String judul, String isi_laporan) {
         this.judul = judul;
-        this.keterangan = keterangan;
+        this.isi_laporan = isi_laporan;
     }
 
     public String getJudul() {
@@ -29,11 +29,11 @@ public class ListItem {
         this.image = image;
     }
 
-    public String getKeterangan() {
-        return keterangan;
+    public String getIsi() {
+        return isi_laporan;
     }
 
-    public void setKeterangan(String keterangan) {
-        this.keterangan = keterangan;
+    public void setIsi(String isi_laporan) {
+        this.isi_laporan = isi_laporan;
     }
 }
