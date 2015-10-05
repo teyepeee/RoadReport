@@ -1,1 +1,1 @@
-Aplikasi laporan kerusakan jalan.
+Road infrastructure Android app.
