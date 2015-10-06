@@ -1,12 +1,17 @@
 package com.thor.roadreport.activity;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
+import android.location.Location;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.content.ContextCompat;
@@ -75,10 +80,38 @@ public class MainActivity extends AppCompatActivity
 
     public static final int MEDIA_TYPE_IMAGE = 1;
 
-    private Uri fileUri; // file url to store image/video
+    private Uri fileUri;
+
+    LocationManager locManager;// = (LocationManager)getSystemService(LOCATION_SERVICE);
+    Location location;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+        locManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        String gpsProvider = LocationManager.GPS_PROVIDER;
+
+        //Prompts user to enable location services if it is not already enabled
+        if (!locManager.isProviderEnabled(gpsProvider)) {
+
+            //Alert Dialog
+            AlertDialog alertDialog = new AlertDialog.Builder(this).create();
+            alertDialog.setTitle("Pemberitahuan");
+            alertDialog.setMessage("Lokasi GPS harus diaktifkan!");
+            alertDialog.setCancelable(false);
+            alertDialog.setButton(DialogInterface.BUTTON_NEGATIVE,
+                    "OK", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            String locConfig = Settings.ACTION_LOCATION_SOURCE_SETTINGS;
+                            Intent enableGPS = new Intent(locConfig);
+                            startActivity(enableGPS);
+                        }
+                    });
+            alertDialog.show();
+
+        }
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);

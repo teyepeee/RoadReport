@@ -61,9 +61,9 @@ public class SQLiteHandler extends SQLiteOpenHelper {
 		SQLiteDatabase db = this.getWritableDatabase();
 
 		ContentValues values = new ContentValues();
-		values.put(KEY_NAMA, nama); // Name
-		values.put(KEY_EMAIL, email); // Email
-		values.put(KEY_UID, uid); // Email
+		values.put(KEY_NAMA, nama);
+		values.put(KEY_EMAIL, email);
+		values.put(KEY_UID, uid);
 
 		// Inserting Row
 		long id = db.insert(TABLE_USER, null, values);

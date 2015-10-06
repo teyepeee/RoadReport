@@ -17,4 +17,6 @@ public class Cons {
     public static final String JUDUL = "judul";
     public static final String ISI_LAPORAN = "isi_laporan";
     public static final String GAMBAR = "gambar";
+    public static final String LATITUDE = "latitude";
+    public static final String LONGITUDE = "longitude";
 }
