@@ -2,8 +2,10 @@ package com.thor.roadreport.model;
 
 public class ListItem {
     private String judul;
-    private String image;
+    private String gambar;
     private String isi_laporan;
+    private Double latitude;
+    private Double longitude;
 
     public ListItem() {
     }
@@ -22,11 +24,11 @@ public class ListItem {
     }
 
     public String getImage() {
-        return image;
+        return gambar;
     }
 
-    public void setImage(String image) {
-        this.image = image;
+    public void setImage(String gambar) {
+        this.gambar = gambar;
     }
 
     public String getIsi() {
@@ -35,5 +37,21 @@ public class ListItem {
 
     public void setIsi(String isi_laporan) {
         this.isi_laporan = isi_laporan;
+    }
+
+    public Double getLat() {
+        return latitude;
+    }
+
+    public void setLat(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLng() {
+        return longitude;
+    }
+
+    public void setLng(Double longitude) {
+        this.longitude = longitude;
     }
 }

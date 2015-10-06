@@ -33,17 +33,17 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.error.VolleyError;
 import com.android.volley.request.StringRequest;
+import com.google.gson.Gson;
 import com.thor.roadreport.R;
 import com.thor.roadreport.adapter.ListAdapter;
 import com.thor.roadreport.app.AppController;
 import com.thor.roadreport.helper.SQLiteHandler;
 import com.thor.roadreport.helper.SessionManager;
 import com.thor.roadreport.model.ListItem;
+import com.thor.roadreport.model.response.DataItems;
+import com.thor.roadreport.model.response.ResponseModel;
 import com.thor.roadreport.util.Cons;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.thor.roadreport.util.MyProgresDialog;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -57,15 +57,16 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 
 
-public class MainActivity extends AppCompatActivity
-        implements ListAdapter.OnClickItemOnList, NavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends AppCompatActivity implements ListAdapter.OnClickItemOnList, NavigationView.OnNavigationItemSelectedListener {
 
     private SQLiteHandler db;
     private SessionManager session;
+    private MyProgresDialog myProgresDialog;
 
     RecyclerView recyclerView;
     ListAdapter adapter;
     List<ListItem> items;
+    List<DataItems> dataitems;
 
     @Bind(R.id.name)
     TextView txtName;
@@ -87,7 +88,6 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         locManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         String gpsProvider = LocationManager.GPS_PROVIDER;
 
@@ -117,6 +117,7 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         ButterKnife.bind(this);
+        myProgresDialog = new MyProgresDialog(this);
 
         // SqLite database handler
         db = new SQLiteHandler(getApplicationContext());
@@ -135,7 +136,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View view) {
                 //Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        //.setAction("Action", null).show();
+                //.setAction("Action", null).show();
                 captureImage();
             }
         });
@@ -165,11 +166,13 @@ public class MainActivity extends AppCompatActivity
         recyclerView.setLayoutManager(linearLayoutManager);
 
         items = new ArrayList<>();
-        ambilDataDariAPI();
 
         adapter = new ListAdapter(items, this);
         adapter.setOnClickItemOnList(this);
         recyclerView.setAdapter(adapter);
+
+        ambilDataDariAPI();
+
 
         // Checking camera availability
         if (!isDeviceSupportCamera()) {
@@ -263,6 +266,7 @@ public class MainActivity extends AppCompatActivity
         i.putExtra("filePath", fileUri.getPath());
         i.putExtra("isImage", isImage);
         startActivity(i);
+        finish();
     }
 
     public Uri getOutputMediaFileUri(int type) {
@@ -313,8 +317,8 @@ public class MainActivity extends AppCompatActivity
         switch (item.getItemId()) {
             case R.id.pengaturan:
                 Toast.makeText(getApplicationContext(),
-                    "Menu Pengaturan", Toast.LENGTH_SHORT)
-                    .show();
+                        "Menu Pengaturan", Toast.LENGTH_SHORT)
+                        .show();
                 return true;
             case R.id.logout:
                 logoutUser();
@@ -336,40 +340,47 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void ambilDataDariAPI() {
+
+        myProgresDialog.showProgress("Sedang Mengambil Data...");
+
         StringRequest stringRequest = new StringRequest(Request.Method.GET, Cons.URL_ITEM, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
+
                 if (response != null) {
-                    try {
-                        JSONObject obj = new JSONObject(response);
-                        JSONArray data = obj.getJSONArray("items");
+                    System.out.println("kembalian " + response);
 
-                        for (int i=0; i<data.length(); i++) {
-                            ListItem item = new ListItem();
+                    ResponseModel responseModel = new Gson().fromJson(response, ResponseModel.class);
+                    dataitems = responseModel.items;
 
-                            item.setJudul(data.getJSONObject(i).getString("judul"));
-                            item.setIsi(data.getJSONObject(i).getString("isi_laporan"));
-                            item.setImage(data.getJSONObject(i).getString("gambar"));
+                    for (DataItems data : dataitems) {
 
-                            items.add(item);
-                        }
+                        ListItem item = new ListItem();
 
-                        adapter.notifyDataSetChanged();
+                        item.setJudul(data.judul);
+                        item.setIsi(data.isi_laporan);
+                        item.setImage(data.gambar);
+                        item.setLat(data.latitude);
+                        item.setLng(data.longitude);
 
-                    } catch (JSONException e) {
-                        e.printStackTrace();
+                        items.add(item);
                     }
 
                 }
+
+                myProgresDialog.hideProgress();
+                adapter.notifyDataSetChanged();
 
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-
+                error.printStackTrace();
+                myProgresDialog.hideProgress();
             }
         });
 
+        stringRequest.setShouldCache(false);
         AppController.getInstance().addToRequestQueue(stringRequest, TAG);
     }
 
@@ -379,10 +390,16 @@ public class MainActivity extends AppCompatActivity
         ListItem itemnya = items.get(position);
         String judul = itemnya.getJudul();
         String isi_laporan = itemnya.getIsi();
+        String gambar = itemnya.getImage();
+        Double latitude = itemnya.getLat();
+        Double longitude = itemnya.getLng();
 
         Intent intent = new Intent(MainActivity.this, DetailActivity.class);
         intent.putExtra("judul", judul);
         intent.putExtra("isi_laporan", isi_laporan);
+        intent.putExtra("gambar", gambar);
+        intent.putExtra("latitude", latitude);
+        intent.putExtra("longitude", longitude);
         startActivity(intent);
 
     }
@@ -400,7 +417,7 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.laporan) {
 
         }
-
+        //drawerlayout
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;

@@ -19,6 +19,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Base64;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -42,6 +43,7 @@ import com.thor.roadreport.R;
 import com.thor.roadreport.app.AppController;
 import com.thor.roadreport.util.Cons;
 
+import java.io.ByteArrayOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -64,6 +66,7 @@ public class ReportActivity extends AppCompatActivity {
     ImageView imgPreview;
 
     private String filePath = null;
+    private String imgStr = "";
     //private ImageView imgPreview;
 
     private ProgressDialog pDialog;
@@ -90,14 +93,14 @@ public class ReportActivity extends AppCompatActivity {
             alertDialog.setMessage("Lokasi GPS harus diaktifkan!");
             alertDialog.setCancelable(false);
             alertDialog.setButton(DialogInterface.BUTTON_NEGATIVE,
-                "OK", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        String locConfig = Settings.ACTION_LOCATION_SOURCE_SETTINGS;
-                        Intent enableGPS = new Intent(locConfig);
-                        startActivity(enableGPS);
-                    }
-                });
+                    "OK", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            String locConfig = Settings.ACTION_LOCATION_SOURCE_SETTINGS;
+                            Intent enableGPS = new Intent(locConfig);
+                            startActivity(enableGPS);
+                        }
+                    });
             alertDialog.show();
 
         }
@@ -149,7 +152,11 @@ public class ReportActivity extends AppCompatActivity {
     private void previewMedia(boolean isImage) {
         // Checking whether captured media is image or video
         if (isImage) {
+
+            setImgStr(convertGambar(filePath));
+
             imgPreview.setVisibility(View.VISIBLE);
+
             // bimatp factory
             BitmapFactory.Options options = new BitmapFactory.Options();
 
@@ -160,7 +167,29 @@ public class ReportActivity extends AppCompatActivity {
             final Bitmap bitmap = BitmapFactory.decodeFile(filePath, options);
 
             imgPreview.setImageBitmap(bitmap);
+
+
         }
+    }
+
+    private Bitmap getImageBitmap(String filePath) {
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inSampleSize = 8;
+        Bitmap bitmap = BitmapFactory.decodeFile(filePath, options);
+
+        return bitmap;
+    }
+
+
+    private String convertGambar(String filePath) {
+        Bitmap bitmap = getImageBitmap(filePath);
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 90, stream);
+
+        byte [] byte_arr = stream.toByteArray();
+        String imgStr = Base64.encodeToString(byte_arr, Base64.DEFAULT);
+
+        return imgStr;
     }
 
     /**
@@ -236,14 +265,16 @@ public class ReportActivity extends AppCompatActivity {
 
     private void PostDataToServer() {
 
+        final String imgSource = getImgStr();
+        final String latitude = String.valueOf(location.getLatitude());
+        final String longitude = String.valueOf(location.getLongitude());
+
         pDialog.setMessage("Mengirim laporan...");
         showDialog();
 
         StringRequest stringRequest = new StringRequest(Request.Method.POST, Cons.URL_REPORT, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
-                System.out.println(response);
-                //Log.d(TAG, "Reporting Response: " + response.toString());
                 hideDialog();
                 Toast.makeText(getApplicationContext(), "Laporan berhasil dikirim.", Toast.LENGTH_LONG).show();
 
@@ -273,14 +304,15 @@ public class ReportActivity extends AppCompatActivity {
 
                 params.put(Cons.JUDUL, inputJudul.getText().toString());
                 params.put(Cons.ISI_LAPORAN, inputIsi.getText().toString());
-                params.put(Cons.GAMBAR,"");
-                params.put(Cons.LATITUDE, "");
-                params.put(Cons.LONGITUDE, "");
+                params.put(Cons.GAMBAR, imgSource);
+                params.put(Cons.LATITUDE, latitude);
+                params.put(Cons.LONGITUDE, longitude);
 
                 return params;
             }
         };
 
+        stringRequest.setShouldCache(false);
         AppController.getInstance().addToRequestQueue(stringRequest, TAG);
     }
 
@@ -347,4 +379,11 @@ public class ReportActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    public void setImgStr(String imgStr) {
+        this.imgStr = imgStr;
+    }
+
+    public String getImgStr() {
+        return imgStr;
+    }
 }

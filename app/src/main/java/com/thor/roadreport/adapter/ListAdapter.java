@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.squareup.picasso.Picasso;
 import com.thor.roadreport.R;
 import com.thor.roadreport.model.ListItem;
 
@@ -15,14 +16,12 @@ import java.util.List;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
-import de.hdodenhof.circleimageview.CircleImageView;
 
 public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
 
     List<ListItem> feedItemList;
     Context context;
     OnClickItemOnList onClickItemOnList;
-
 
     public ListAdapter(List<ListItem> feedItemList, Context context) {
         this.feedItemList = feedItemList;
@@ -45,7 +44,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
 
         holder.judul.setText(items.getJudul());
         holder.isi_laporan.setText(items.getIsi());
-
+        Picasso.with(context).load(items.getImage()).into(holder.gambar);
         holder.area.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -65,7 +64,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
     public class ViewHolder extends RecyclerView.ViewHolder {
 
         @Bind(R.id.gambar)
-        CircleImageView gambar;
+        com.thor.roadreport.util.CircleImageView gambar;
         @Bind(R.id.judul)
         TextView judul;
         @Bind(R.id.isi_laporan)

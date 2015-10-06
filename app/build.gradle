@@ -29,6 +29,6 @@ dependencies {
     compile 'com.pixplicity.easyprefs:library:1.7'
     compile 'de.hdodenhof:circleimageview:2.0.0'
     compile 'dev.dworks.libs:volleyplus:+'
-    compile 'com.google.android.gms:play-services-ads:8.1.0'
-    compile 'com.google.android.gms:play-services-identity:8.1.0'
+    compile 'com.google.code.gson:gson:2.2.4'
+    compile 'com.squareup.picasso:picasso:2.5.2'
 }
